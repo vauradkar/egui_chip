@@ -1,0 +1,13 @@
+{
+    "rust-analyzer.rustfmt.extraArgs": [
+        "+nightly"
+    ],
+    "evenBetterToml.formatter.alignComments": true,
+    "evenBetterToml.formatter.allowedBlankLines": 1,
+    "evenBetterToml.formatter.arrayTrailingComma": true,
+    "evenBetterToml.formatter.columnWidth": 100,
+    "evenBetterToml.formatter.trailingNewline": true,
+    "evenBetterToml.formatter.reorderArrays": true,
+    "evenBetterToml.formatter.reorderKeys": true,
+    "evenBetterToml.formatter.reorderInlineTables": true
+}

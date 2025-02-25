@@ -1,0 +1,23 @@
+[package]
+authors = ["Vikram Auradkar <vikram.auradkar@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+name = "egui_chip"
+version = "0.1.0"
+
+[lints.rust]
+missing_docs = { level = "warn" }
+rust-2024-compatibility = { level = "warn" }
+unsafe_code = { level = "warn" }
+
+[dependencies]
+egui = { version = "0.31", features = ["persistence"] }
+serde = { version = "1", features = ["derive"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-futures = "0.4"
+web-sys = "0.3.70"
+
+[dev-dependencies]
+eframe = "0.31.0"
+egui_nerdfonts = { git = "https://github.com/vauradkar/egui_nerdfonts.git" }

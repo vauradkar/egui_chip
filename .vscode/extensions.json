@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+        "rust-lang.rust-analyzer",
+        "visualjj.visualjj",
+        "tamasfe.even-better-toml"
+    ]
+}
