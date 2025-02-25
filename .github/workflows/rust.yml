@@ -1,0 +1,66 @@
+name: CI
+
+on: [ push, pull_request ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+  RUSTDOCFLAGS: -D warnings
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install packages (Linux)
+        if: runner.os == 'Linux'
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.2
+        with:
+          packages: libwebkit2gtk-4.1-dev
+          version: 1.0
+          execute_install_scripts: true
+
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up cargo cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}-cargo-cache
+
+      - name: Clippy all-features
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all-targets --all-features --workspace -- -D warnings
+
+      - name: RustFmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all --check
+
+      - name: Test
+        uses: actions-rs/cargo@v1
+        # Snapshot tests currently only work on macos, since they require a gpu
+        if: ${{ matrix.os == 'macos-latest' }}
+        with:
+          command: test
+          args: --all-features --workspace
+
+      - name: Cargo Doc
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --lib --no-deps --all-features
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ runner.os }}
+          path: "**/tests/snapshots"
