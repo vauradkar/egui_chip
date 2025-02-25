@@ -1,8 +1,12 @@
 [package]
 authors = ["Vikram Auradkar <vikram.auradkar@gmail.com>"]
+description = "compact component to display tags, selections, or actions"
 edition = "2024"
+homepage = "https://github.com/vauradkar/egui_chip"
 license = "MIT OR Apache-2.0"
 name = "egui_chip"
+readme = "README.md"
+repository = "https://github.com/vauradkar/egui_chip"
 version = "0.1.0"
 
 [lints.rust]
