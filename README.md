@@ -1,5 +1,10 @@
 # egui_chip: compact component to display tags, selections, or actions
 
+![Crates.io License](https://img.shields.io/crates/l/egui_chip)
+![docs.rs](https://img.shields.io/docsrs/egui_chip)
+![Crates.io Version](https://img.shields.io/crates/v/egui_chip)
+![Crates.io License](https://img.shields.io/crates/l/egui_chip)
+
 ## Features
 
 - Customizable options for appearance
