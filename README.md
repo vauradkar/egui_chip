@@ -1,9 +1,10 @@
 # egui_chip: compact component to display tags, selections, or actions
 
-![Crates.io License](https://img.shields.io/crates/l/egui_chip)
-![docs.rs](https://img.shields.io/docsrs/egui_chip)
-![Crates.io Version](https://img.shields.io/crates/v/egui_chip)
-![Crates.io License](https://img.shields.io/crates/l/egui_chip)
+[![docs.rs](https://img.shields.io/docsrs/egui_chip)](https://docs.rs/egui_chip)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/vauradkar/egui_chip/rust.yml)](https://github.com/vauradkar/egui_chip/actions?workflow=CI)
+[![Crates.io Version](https://img.shields.io/crates/v/egui_chip)](https://crates.io/crates/egui_chip)
+[![Crates.io License](https://img.shields.io/crates/l/egui_chip)](<https://github.com/vauradkar/egui_chip/blob/main/LICENSE-MIT>)
+[![Crates.io License](https://img.shields.io/crates/l/egui_chip)](<https://github.com/vauradkar/egui_chip/blob/main/LICENSE-APACHE>)
 
 ## Features
 
