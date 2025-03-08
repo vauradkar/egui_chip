@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use egui::Align;
 use egui::Color32;
 use egui::Direction;
@@ -23,8 +25,12 @@ pub struct ChipEditOutput {
     /// the `Response` is the `Response::union` of all the containing
     /// responses.
     pub response: Response,
+
     /// The range of the cursor within the text.
     pub cursor_range: Option<CursorRange>,
+
+    /// True if the widget gained focus.
+    pub gained_focus: bool,
 }
 
 impl ChipEditOutput {
@@ -37,8 +43,10 @@ impl ChipEditOutput {
         let Self {
             response,
             cursor_range,
+            gained_focus,
         } = other;
-        self.response.union(response);
+        self.gained_focus |= gained_focus || response.gained_focus();
+        self.response = self.response.union(response);
         if self.cursor_range.is_none() {
             self.cursor_range = cursor_range;
         }
@@ -118,6 +126,7 @@ impl ChipEditOutput {
 impl From<TextEditOutput> for ChipEditOutput {
     fn from(value: TextEditOutput) -> Self {
         Self {
+            gained_focus: value.response.gained_focus(),
             response: value.response,
             cursor_range: value.cursor_range,
         }
@@ -127,6 +136,7 @@ impl From<TextEditOutput> for ChipEditOutput {
 impl From<Response> for ChipEditOutput {
     fn from(response: Response) -> Self {
         Self {
+            gained_focus: response.gained_focus(),
             response,
             cursor_range: None,
         }
@@ -280,7 +290,7 @@ impl ChipEditBuilder {
 /// Creates a chip style textbox
 /// Press backspace in empty chip deletes it
 /// Lost focus from empty chip deletes it
-#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct ChipEdit {
     /// The separator string used to split chip texts.
     separator: String,
@@ -305,6 +315,12 @@ pub struct ChipEdit {
     // TODO: Fix serde
     #[serde(skip)]
     icon: Option<RichText>,
+}
+
+impl Display for ChipEdit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.values().join(&self.separator))
+    }
 }
 
 impl ChipEdit {

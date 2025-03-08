@@ -33,7 +33,7 @@ fn default_outer_margin() -> Margin {
     r
 }
 
-#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub(crate) struct Chip {
     pub(crate) text: String,
     pub(crate) at_start: bool,
