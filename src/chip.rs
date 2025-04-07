@@ -7,7 +7,7 @@ use egui::Sense;
 use egui::TextEdit;
 use egui::Ui;
 
-use crate::chip_edit::ChipEditOutput;
+use crate::output::ChipEditOutput;
 
 fn default_chip_text_color(_ui: &Ui) -> Color32 {
     Color32::WHITE

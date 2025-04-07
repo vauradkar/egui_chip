@@ -34,10 +34,12 @@
 //! - Integration with the `egui` framework
 #![warn(clippy::all)]
 
+mod builder;
 mod chip;
 mod chip_edit;
+mod output;
 mod state;
 
+pub use builder::ChipEditBuilder;
 pub use chip_edit::ChipEdit;
-pub use chip_edit::ChipEditBuilder;
-pub use chip_edit::ChipEditOutput;
+pub use output::ChipEditOutput;

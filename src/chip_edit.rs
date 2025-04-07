@@ -3,289 +3,18 @@ use std::fmt::Display;
 use egui::Align;
 use egui::Color32;
 use egui::Direction;
-use egui::Key;
 use egui::Layout;
 use egui::Response;
 use egui::RichText;
 use egui::Stroke;
 use egui::Ui;
 use egui::Widget;
-use egui::text::CursorRange;
-use egui::text_edit::TextEditOutput;
 use egui::vec2;
 
+use crate::ChipEditOutput;
 use crate::chip::Chip;
 use crate::chip::DEFAULT_CHIP_SIZE;
 use crate::state::State;
-
-/// Represents the output of a `ChipEdit` widget.
-pub struct ChipEditOutput {
-    /// The response from the widget.
-    /// As a single ChipEdit can have multiple TextEdits in it,
-    /// the `Response` is the `Response::union` of all the containing
-    /// responses.
-    pub response: Response,
-
-    /// The range of the cursor within the text.
-    pub cursor_range: Option<CursorRange>,
-
-    /// True if the widget gained focus.
-    pub gained_focus: bool,
-}
-
-impl ChipEditOutput {
-    /// Merges another `ChipEditOutput` into this one.
-    ///
-    /// # Arguments
-    ///
-    /// * `other` - The other `ChipEditOutput` to merge.
-    pub fn union(&mut self, other: Self) {
-        let Self {
-            response,
-            cursor_range,
-            gained_focus,
-        } = other;
-        self.gained_focus |= gained_focus || response.gained_focus();
-        self.response = self.response.union(response);
-        if self.cursor_range.is_none() {
-            self.cursor_range = cursor_range;
-        }
-    }
-
-    /// Checks if the cursor is at the specified position.
-    ///
-    /// # Arguments
-    ///
-    /// * `pos` - The position to check.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the cursor is at the specified position, `false` otherwise.
-    pub fn cursor_at(&self, pos: usize) -> bool {
-        if let Some(cursor) = &self.cursor_range {
-            cursor.single().is_some() && (cursor.as_sorted_char_range().end == pos)
-        } else {
-            false
-        }
-    }
-
-    /// Checks if the cursor is at the end of the text.
-    ///
-    /// # Arguments
-    ///
-    /// * `text` - The text to check.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the cursor is at the end of the text, `false` otherwise.
-    pub(crate) fn cursor_at_end(&self, text: &str) -> bool {
-        self.cursor_at(text.len())
-    }
-
-    /// Checks if the cursor is at the start of the text.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the cursor is at the start of the text, `false` otherwise.
-    pub(crate) fn cursor_at_start(&self) -> bool {
-        self.cursor_at(0)
-    }
-
-    /// Checks if the widget gained focus.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the widget gained focus, `false` otherwise.
-    pub fn gained_focus(&self) -> bool {
-        self.response.gained_focus() || self.response.clicked()
-    }
-
-    /// Checks if the widget lost focus.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the widget lost focus, `false` otherwise.
-    pub fn lost_focus(&self) -> bool {
-        self.response.lost_focus()
-    }
-
-    /// Checks if the specified key is pressed.
-    ///
-    /// # Arguments
-    ///
-    /// * `key` - The key to check.
-    ///
-    /// # Returns
-    ///
-    /// `true` if the key is pressed, `false` otherwise.
-    pub(crate) fn is_key_pressed(&self, key: Key) -> bool {
-        self.response.ctx.input(|i| i.key_pressed(key))
-    }
-}
-
-impl From<TextEditOutput> for ChipEditOutput {
-    fn from(value: TextEditOutput) -> Self {
-        Self {
-            gained_focus: value.response.gained_focus(),
-            response: value.response,
-            cursor_range: value.cursor_range,
-        }
-    }
-}
-
-impl From<Response> for ChipEditOutput {
-    fn from(response: Response) -> Self {
-        Self {
-            gained_focus: response.gained_focus(),
-            response,
-            cursor_range: None,
-        }
-    }
-}
-
-/// A builder for creating a `ChipEdit` widget with various customization
-/// options.
-///
-/// # Examples
-///
-/// ```
-/// use egui::Color32;
-/// use egui_chip::ChipEditBuilder;
-///
-/// let chip_edit = ChipEditBuilder::new(",")
-///     .unwrap()
-///     .texts(vec!["Chip1", "Chip2", "Chip3"])
-///     .chip_colors(Color32::from_rgb(255, 0, 0), Color32::from_rgb(0, 255, 0))
-///     .widget_colors(Color32::from_rgb(0, 0, 255), Color32::from_rgb(255, 255, 0))
-///     .frame(true)
-///     .chip_size(Some([100.0, 50.0]))
-///     .build();
-/// ```
-pub struct ChipEditBuilder {
-    chip_edit: ChipEdit,
-    texts: Vec<String>,
-}
-
-impl ChipEditBuilder {
-    /// Creates a new `ChipEditBuilder` with the specified separator.
-    ///
-    /// # Arguments
-    ///
-    /// * `separator` - The separator string used to split chip texts.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the separator is empty.
-    pub fn new(separator: &str) -> Result<Self, String> {
-        if separator.is_empty() {
-            Err("separator cannot be empty".to_owned())
-        } else {
-            let ret = Self {
-                chip_edit: ChipEdit {
-                    separator: separator.into(),
-                    units: vec![],
-                    widget_bg: None,
-                    widget_fg: None,
-                    chip_bg: None,
-                    chip_fg: None,
-                    focused: None,
-                    frame: true,
-                    chip_size: None,
-                    icon: None,
-                },
-                texts: vec![],
-            };
-            Ok(ret)
-        }
-    }
-
-    /// Sets the initial texts for the chips.
-    ///
-    /// # Arguments
-    ///
-    /// * `texts` - An iterator of strings representing the initial texts for
-    ///   the chips.
-    pub fn texts(mut self, texts: impl IntoIterator<Item = impl ToString>) -> Self {
-        self.texts = texts.into_iter().map(|s| s.to_string()).collect();
-        self
-    }
-
-    /// Sets the background and text colors for the chips within `ChipEdit`.
-    ///
-    /// # Arguments
-    ///
-    /// * `bg_color` - The background color for the chips.
-    /// * `text_color` - The text color for the chips.
-    pub fn chip_colors(mut self, bg_color: Color32, text_color: Color32) -> Self {
-        self.chip_edit.chip_bg = Some(bg_color);
-        self.chip_edit.chip_fg = Some(text_color);
-        self
-    }
-
-    /// Sets the background and foreground colors for the widget.
-    ///
-    /// # Arguments
-    ///
-    /// * `bg_color` - The background color for the widget.
-    /// * `fg_color` - The foreground color for the widget.
-    pub fn widget_colors(mut self, bg_color: Color32, fg_color: Color32) -> Self {
-        self.chip_edit.widget_bg = Some(bg_color);
-        self.chip_edit.widget_fg = Some(fg_color);
-        self
-    }
-
-    /// Sets whether the widget should have a frame.
-    ///
-    /// # Arguments
-    ///
-    /// * `frame` - A boolean indicating whether the widget should have a frame.
-    pub fn frame(mut self, frame: bool) -> Self {
-        self.chip_edit.frame = frame;
-        self
-    }
-
-    /// Sets the size of the chips.
-    ///
-    /// # Arguments
-    ///
-    /// * `chip_size` - An optional array representing the width and height of
-    ///   the chips.
-    pub fn chip_size(mut self, chip_size: Option<[f32; 2]>) -> Self {
-        self.chip_edit.chip_size = chip_size;
-        self
-    }
-
-    /// Sets leading icon for the chips
-    ///
-    /// # Arguments
-    ///
-    /// * `char` - A single char text
-    pub fn chip_icon(mut self, icon: Option<RichText>) -> Result<Self, String> {
-        if matches!(&icon, Some(t) if t.text().chars().count() != 1) {
-            Err(format!(
-                "icon text needs to be single char but found {}",
-                icon.unwrap().text().len()
-            ))
-        } else {
-            self.chip_edit.icon = icon;
-            Ok(self)
-        }
-    }
-
-    /// Builds the `ChipEdit` widget.
-    ///
-    /// # Returns
-    ///
-    /// The constructed `ChipEdit` widget.
-    pub fn build(self) -> ChipEdit {
-        let Self {
-            mut chip_edit,
-            texts,
-        } = self;
-        chip_edit.rebuild(texts);
-        chip_edit
-    }
-}
 
 /// Creates a chip style textbox
 /// Press backspace in empty chip deletes it
@@ -293,28 +22,28 @@ impl ChipEditBuilder {
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct ChipEdit {
     /// The separator string used to split chip texts.
-    separator: String,
+    pub(crate) separator: String,
     /// The units (chips) in the widget.
-    units: Vec<Chip>,
+    pub(crate) units: Vec<Chip>,
     /// The background color of the widget.
-    widget_bg: Option<Color32>,
+    pub(crate) widget_bg: Option<Color32>,
     /// The foreground color of the widget.
-    widget_fg: Option<Color32>,
+    pub(crate) widget_fg: Option<Color32>,
     /// The background color of the chips.
-    chip_bg: Option<Color32>,
+    pub(crate) chip_bg: Option<Color32>,
     /// The foreground color of the chips.
-    chip_fg: Option<Color32>,
+    pub(crate) chip_fg: Option<Color32>,
     /// The index of the focused chip, if any.
-    focused: Option<usize>,
+    pub(crate) focused: Option<usize>,
     /// Whether the widget should have a frame.
-    frame: bool,
+    pub(crate) frame: bool,
     /// The size of the chips.
-    chip_size: Option<[f32; 2]>,
+    pub(crate) chip_size: Option<[f32; 2]>,
 
     /// Leading `icon` char in chip
     // TODO: Fix serde
     #[serde(skip)]
-    icon: Option<RichText>,
+    pub(crate) icon: Option<RichText>,
 }
 
 impl Display for ChipEdit {
@@ -446,7 +175,7 @@ impl ChipEdit {
     /// # Arguments
     ///
     /// * `texts` - A vector of strings representing the texts for the chips.
-    fn rebuild(&mut self, texts: Vec<String>) {
+    pub(crate) fn rebuild(&mut self, texts: Vec<String>) {
         self.units.clear();
         let len = texts.len();
 

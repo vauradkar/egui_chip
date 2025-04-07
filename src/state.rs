@@ -1,7 +1,7 @@
 use egui::Key;
 
+use crate::ChipEditOutput;
 use crate::chip::Chip;
-use crate::chip_edit::ChipEditOutput;
 
 #[derive(Debug)]
 pub(crate) struct State {
