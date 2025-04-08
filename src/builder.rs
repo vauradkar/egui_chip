@@ -42,16 +42,8 @@ impl ChipEditBuilder {
         } else {
             let ret = Self {
                 chip_edit: ChipEdit {
-                    separator: separator.into(),
-                    units: vec![],
-                    widget_bg: None,
-                    widget_fg: None,
-                    chip_bg: None,
-                    chip_fg: None,
-                    focused: None,
-                    frame: true,
-                    chip_size: None,
-                    icon: None,
+                    texts: vec![],
+                    unowned: crate::UnownedChipEdit::new(separator)?,
                 },
                 texts: vec![],
             };
@@ -77,8 +69,8 @@ impl ChipEditBuilder {
     /// * `bg_color` - The background color for the chips.
     /// * `text_color` - The text color for the chips.
     pub fn chip_colors(mut self, bg_color: Color32, text_color: Color32) -> Self {
-        self.chip_edit.chip_bg = Some(bg_color);
-        self.chip_edit.chip_fg = Some(text_color);
+        self.chip_edit.unowned.chip_bg = Some(bg_color);
+        self.chip_edit.unowned.chip_fg = Some(text_color);
         self
     }
 
@@ -89,8 +81,8 @@ impl ChipEditBuilder {
     /// * `bg_color` - The background color for the widget.
     /// * `fg_color` - The foreground color for the widget.
     pub fn widget_colors(mut self, bg_color: Color32, fg_color: Color32) -> Self {
-        self.chip_edit.widget_bg = Some(bg_color);
-        self.chip_edit.widget_fg = Some(fg_color);
+        self.chip_edit.unowned.widget_bg = Some(bg_color);
+        self.chip_edit.unowned.widget_fg = Some(fg_color);
         self
     }
 
@@ -100,7 +92,7 @@ impl ChipEditBuilder {
     ///
     /// * `frame` - A boolean indicating whether the widget should have a frame.
     pub fn frame(mut self, frame: bool) -> Self {
-        self.chip_edit.frame = frame;
+        self.chip_edit.unowned.frame = frame;
         self
     }
 
@@ -111,7 +103,7 @@ impl ChipEditBuilder {
     /// * `chip_size` - An optional array representing the width and height of
     ///   the chips.
     pub fn chip_size(mut self, chip_size: Option<[f32; 2]>) -> Self {
-        self.chip_edit.chip_size = chip_size;
+        self.chip_edit.unowned.chip_size = chip_size;
         self
     }
 
@@ -127,7 +119,7 @@ impl ChipEditBuilder {
                 icon.unwrap().text().len()
             ))
         } else {
-            self.chip_edit.icon = icon;
+            self.chip_edit.unowned.icon = icon;
             Ok(self)
         }
     }
@@ -142,7 +134,8 @@ impl ChipEditBuilder {
             mut chip_edit,
             texts,
         } = self;
-        chip_edit.rebuild(texts);
+        chip_edit.set_text(texts);
+        chip_edit.rebuild();
         chip_edit
     }
 }

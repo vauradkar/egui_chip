@@ -61,15 +61,16 @@ impl State {
         unit: &Chip,
         output: &ChipEditOutput,
         separator: &str,
+        text: &str,
     ) {
         let resp = &output.response;
 
-        if resp.changed() && unit.is_separator && !unit.text.is_empty() {
+        if resp.changed() && unit.is_separator() && !text.is_empty() {
             self.split = Some(index);
             self.set_focus(index + 1);
         }
 
-        if self.split.is_none() && output.response.changed() && unit.needs_update(separator) {
+        if self.split.is_none() && output.response.changed() && text.contains(separator) {
             self.split = Some(index);
             self.set_focus(index);
         }
@@ -82,20 +83,20 @@ impl State {
             return;
         }
 
-        let act_at_end = unit.at_end && output.cursor_at_end(&unit.text);
-        let act_at_start = unit.at_start && output.cursor_at_start();
+        let act_at_end = unit.at_end() && output.cursor_at_end(text);
+        let act_at_start = unit.at_start() && output.cursor_at_start();
 
         if resp.has_focus() {
             if output.is_key_pressed(Key::Delete) && act_at_end && index < max_index {
                 self.set_focus(index);
-                if unit.is_separator {
+                if unit.is_separator() {
                     self.delete = Some(index + 1);
                 } else {
                     self.set_merge(index, index + 2);
                 }
             } else if output.is_key_pressed(Key::Backspace) && act_at_start && index > 1 {
                 self.set_focus(index - 2);
-                if unit.is_separator {
+                if unit.is_separator() {
                     self.delete = Some(index - 1);
                 } else {
                     self.set_merge(index - 2, index);

@@ -12,6 +12,7 @@ use egui::color_picker::Alpha;
 use egui::color_picker::color_edit_button_srgba;
 use egui_chip::ChipEdit;
 use egui_chip::ChipEditBuilder;
+use egui_chip::UnownedChipEdit;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
@@ -78,6 +79,8 @@ impl Configs {
 struct MyApp {
     chip: ChipEdit,
     configs: Configs,
+    uchips: UnownedChipEdit,
+    texts: Vec<String>,
 }
 
 impl MyApp {
@@ -107,6 +110,26 @@ impl MyApp {
                 .into(),
             ),
             configs: Configs::new(cc),
+            uchips: UnownedChipEdit::new(&configs.separator).unwrap(),
+            texts: [
+                "Place",
+                "cursor",
+                "in a chip",
+                "and edit",
+                ",",
+                "delete,",
+                "or backspace",
+                ".",
+                "Chip",
+                "gets",
+                "deleted",
+                "if you",
+                "delete",
+                "when the",
+                "cursor is",
+            ]
+            .map(|s| s.to_owned())
+            .into(),
         }
     }
 }
@@ -119,6 +142,7 @@ impl eframe::App for MyApp {
             ui.add_sized([600., 200.], &mut self.chip);
             ui.add_space(10.);
             ui.separator();
+            self.uchips.show(ui, &mut self.texts);
             ui.add_space(10.);
             ui.label(format!("current values '{}'", self.chip.values().join(" ")));
             ui.add_space(10.);

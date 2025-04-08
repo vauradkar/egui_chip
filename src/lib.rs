@@ -39,7 +39,9 @@ mod chip;
 mod chip_edit;
 mod output;
 mod state;
+mod unowned_chip_edit;
 
 pub use builder::ChipEditBuilder;
 pub use chip_edit::ChipEdit;
 pub use output::ChipEditOutput;
+pub use unowned_chip_edit::UnownedChipEdit;

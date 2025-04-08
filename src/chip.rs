@@ -9,6 +9,12 @@ use egui::Ui;
 
 use crate::output::ChipEditOutput;
 
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+pub(crate) enum ChipKind {
+    Separator,
+    Text,
+}
+
 fn default_chip_text_color(_ui: &Ui) -> Color32 {
     Color32::WHITE
 }
@@ -35,10 +41,9 @@ fn default_outer_margin() -> Margin {
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub(crate) struct Chip {
-    pub(crate) text: String,
     pub(crate) at_start: bool,
     pub(crate) at_end: bool,
-    pub(crate) is_separator: bool,
+    pub(crate) kind: ChipKind,
     pub(crate) bg_color: Option<Color32>,
     pub(crate) text_color: Option<Color32>,
     pub(crate) size: Option<[f32; 2]>,
@@ -49,10 +54,9 @@ pub(crate) struct Chip {
 impl Chip {
     pub fn new_separator() -> Self {
         Chip {
-            text: "".to_owned(),
             at_start: true,
             at_end: true,
-            is_separator: true,
+            kind: ChipKind::Separator,
             bg_color: None,
             text_color: None,
             size: Some(DEFAULT_CHIP_SIZE),
@@ -60,12 +64,11 @@ impl Chip {
         }
     }
 
-    pub fn new_chip(text: String, size: Option<[f32; 2]>, icon: Option<RichText>) -> Self {
+    pub fn new_chip(size: Option<[f32; 2]>, icon: Option<RichText>) -> Self {
         Chip {
-            text,
             at_start: false,
             at_end: false,
-            is_separator: false,
+            kind: ChipKind::Text,
             bg_color: None,
             text_color: None,
             size,
@@ -73,9 +76,8 @@ impl Chip {
         }
     }
 
-    pub fn show_separator(&mut self, ui: &mut Ui) -> ChipEditOutput {
-        // ui.label(RichText::new(&self.text).strong())
-        TextEdit::singleline(&mut self.text)
+    pub fn show_separator(&mut self, ui: &mut Ui, text: &mut String) -> ChipEditOutput {
+        TextEdit::singleline(text)
             .clip_text(true)
             .desired_width(0.0)
             .frame(false)
@@ -92,7 +94,12 @@ impl Chip {
         self.text_color.unwrap_or(default_chip_text_color(ui))
     }
 
-    fn draw_text(&mut self, ui: &mut Ui, focused: bool) -> ChipEditOutput {
+    pub(crate) fn draw_text(
+        &mut self,
+        ui: &mut Ui,
+        focused: bool,
+        text: &mut String,
+    ) -> ChipEditOutput {
         let text_color = self.text_color(ui);
         let mut r = None;
         if let Some(icon) = &self.icon {
@@ -106,7 +113,7 @@ impl Chip {
             );
         }
         let mut ret: ChipEditOutput = if focused {
-            TextEdit::singleline(&mut self.text)
+            TextEdit::singleline(text)
                 .text_color(text_color)
                 .clip_text(true)
                 .frame(false)
@@ -117,7 +124,7 @@ impl Chip {
         } else {
             ui.add_sized(
                 self.size.unwrap_or([0., 0.]),
-                Label::new(RichText::new(&self.text).color(text_color))
+                Label::new(RichText::new(text.as_str()).color(text_color))
                     .sense(Sense::click())
                     .truncate(),
             )
@@ -130,7 +137,7 @@ impl Chip {
         ret
     }
 
-    pub fn show_chip(&mut self, ui: &mut Ui, focused: bool) -> ChipEditOutput {
+    pub fn show_chip(&mut self, ui: &mut Ui, focused: bool, text: &mut String) -> ChipEditOutput {
         egui::Frame::new()
             .corner_radius(8)
             .fill(self.bg_color(ui))
@@ -141,31 +148,39 @@ impl Chip {
                 if let Some(size) = self.size {
                     ui.allocate_ui_with_layout(size.into(), layout, |ui| {
                         ui.spacing_mut().item_spacing = egui::vec2(0., 1.0);
-                        self.draw_text(ui, focused)
+                        self.draw_text(ui, focused, text)
                     })
                     .inner
                 } else {
-                    ui.with_layout(layout, |ui| self.draw_text(ui, focused))
+                    ui.with_layout(layout, |ui| self.draw_text(ui, focused, text))
                         .inner
                 }
             })
             .inner
     }
 
-    pub fn show(&mut self, ui: &mut Ui, focused: bool) -> ChipEditOutput {
-        if self.is_separator {
-            self.show_separator(ui)
+    pub fn show(&mut self, ui: &mut Ui, focused: bool, text: &mut String) -> ChipEditOutput {
+        if self.is_separator() {
+            self.show_separator(ui, text)
         } else {
-            self.show_chip(ui, focused)
+            self.show_chip(ui, focused, text)
         }
     }
 
-    pub(crate) fn update_position(&mut self, output: &ChipEditOutput) {
+    pub(crate) fn update_position(&mut self, output: &ChipEditOutput, text: &str) {
         self.at_start = output.cursor_at_start();
-        self.at_end = output.cursor_at_end(&self.text);
+        self.at_end = output.cursor_at_end(text);
     }
 
-    pub fn needs_update(&self, separator: &str) -> bool {
-        self.text.contains(separator)
+    pub fn at_start(&self) -> bool {
+        self.at_start
+    }
+
+    pub fn at_end(&self) -> bool {
+        self.at_end
+    }
+
+    pub fn is_separator(&self) -> bool {
+        matches!(self.kind, ChipKind::Separator)
     }
 }
