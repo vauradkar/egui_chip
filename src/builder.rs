@@ -2,6 +2,7 @@ use egui::Color32;
 use egui::RichText;
 
 use crate::ChipEdit;
+use crate::UnownedChipEdit;
 
 /// A builder for creating a `ChipEdit` widget with various customization
 /// options.
@@ -137,5 +138,20 @@ impl ChipEditBuilder {
         chip_edit.set_text(texts);
         chip_edit.rebuild();
         chip_edit
+    }
+
+    /// Builds the `UnownedChipEdit` widget without texts ownership.
+    ///
+    /// # Returns
+    ///
+    /// The constructed `UnownedChipEdit` widget.
+    pub fn build_unowned(self) -> UnownedChipEdit {
+        let Self {
+            mut chip_edit,
+            texts,
+        } = self;
+        chip_edit.set_text(texts);
+        chip_edit.rebuild();
+        chip_edit.unowned
     }
 }

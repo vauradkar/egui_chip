@@ -166,7 +166,6 @@ impl UnownedChipEdit {
 
         // Retain focus history for the next iteration
         if state.focus_changed {
-            println!("focus old:{:?} new:{:?}", self.focused, state.focus);
             self.focused = state.focus;
         }
 
@@ -247,7 +246,6 @@ impl UnownedChipEdit {
     }
 
     fn merge(&mut self, texts: &mut Vec<String>, (a, b): (usize, usize), delete: usize) {
-        println!("merge: {} {} {}", a, b, delete);
         let unit_min = if a < b { a } else { b };
         let mut text_min = 0;
         let unit_max = if a > b { a } else { b };

@@ -58,7 +58,7 @@ impl Configs {
         }
     }
 
-    fn build(&self, texts: Vec<String>) -> ChipEdit {
+    fn build(&self, texts: Vec<String>) -> ChipEditBuilder {
         ChipEditBuilder::new(&self.separator)
             .unwrap()
             .frame(self.frame)
@@ -72,7 +72,6 @@ impl Configs {
                 Some(RichText::new(&self.icon).weak())
             })
             .unwrap()
-            .build()
     }
 }
 
@@ -86,50 +85,33 @@ struct MyApp {
 impl MyApp {
     fn new(cc: &CreationContext) -> Self {
         let configs = Configs::new(cc);
+        let texts = [
+            "Place",
+            "cursor",
+            "in a chip",
+            "and edit",
+            ",",
+            "delete,",
+            "or backspace",
+            ".",
+            "Chip",
+            "gets",
+            "deleted",
+            "if you",
+            "delete",
+            "when the",
+            "cursor is",
+            "outside",
+        ];
+        let chip = configs.build(texts.map(|s| s.to_owned()).into()).build();
+        let uchips = configs
+            .build(texts.map(|s| s.to_owned()).into())
+            .build_unowned();
         Self {
-            chip: configs.build(
-                [
-                    "Place",
-                    "cursor",
-                    "in a chip",
-                    "and edit",
-                    ",",
-                    "delete,",
-                    "or backspace",
-                    ".",
-                    "Chip",
-                    "gets",
-                    "deleted",
-                    "if you",
-                    "delete",
-                    "when the",
-                    "cursor is",
-                    "outside",
-                ]
-                .map(|s| s.to_owned())
-                .into(),
-            ),
+            chip,
             configs: Configs::new(cc),
-            uchips: UnownedChipEdit::new(&configs.separator).unwrap(),
-            texts: [
-                "Place",
-                "cursor",
-                "in a chip",
-                "and edit",
-                ",",
-                "delete,",
-                "or backspace",
-                ".",
-                "Chip",
-                "gets",
-                "deleted",
-                "if you",
-                "delete",
-                "when the",
-                "cursor is",
-            ]
-            .map(|s| s.to_owned())
-            .into(),
+            uchips,
+            texts: texts.map(|s| s.to_owned()).into(),
         }
     }
 }
@@ -195,7 +177,8 @@ impl eframe::App for MyApp {
 
             if old != self.configs {
                 let texts = self.chip.values();
-                self.chip = self.configs.build(texts);
+                self.chip = self.configs.build(texts.clone()).build();
+                self.uchips = self.configs.build(texts).build_unowned();
             }
         });
     }
